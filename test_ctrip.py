@@ -1,15 +1,21 @@
 import requests
 from bs4 import BeautifulSoup
 import os
-location = '海南'
-pagenum = 5
-# webstr = 'http://piao.qunar.com/ticket/list.htm?keyword=' + location + '&page='
-def grabdata():
+import re
+import time
+import json
+
+pagenum = 1
+
+def grabSGdata():
     global pagenum
     commentnum = []
-    # if (pagenum == 6):
-    #     os._exit(0)
+    if (pagenum == 2):
+        os._exit(0)
     webstr = 'https://you.ctrip.com/sight/sanya61/s0-p' + str(pagenum) + '.html'
+    wantwenturl = "https://you.ctrip.com/Destinationsite/SharedComm/ShowGowant"
+    wantwentdata = {'Resource':'61',
+            'pageType':'Place'}
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
     response = requests.get(webstr, headers=headers)
     # # print (response)
@@ -21,20 +27,20 @@ def grabdata():
     # print(response.content) #以字节流形式打印
     stra = (response.content).decode('utf-8')
     soup = BeautifulSoup(stra, "html.parser")
-    # strb = soup.find('div', attrs={'class': 'list_wide_mod2'})
-    # strc = strb.findAll('dd', attrs={'class': 'ellipsis'})
     strb = soup.find('div', attrs={'class': 'list_wide_mod2'})
     strc = strb.findAll('a', attrs={'target': '_blank'})
-    # print (strc)
-
-
+    if pagenum == 1:
+        wantwentres = requests.post(wantwenturl, headers=headers, data=wantwentdata)
+        # # 解析结果
+        str_json = wantwentres.content.decode("utf-8")
+        wantwentdict = json.loads(str_json)
+        print (wantwentdict['WentTimes'])
+        print (wantwentdict['WantTimes'])
     # get name
     jumpflag = 0
     jumpflag2 = 0
     temp = []
     for strd in strc:
-        # print (strd)
-        # print ('\n\n\n\n\n\n\n\n\n')
         jumpflag += 1
         if jumpflag == 1:
             continue
@@ -44,26 +50,14 @@ def grabdata():
                 continue
             else:
                 s = str(strd.text)
-                # print (s)
                 temp.append(s)
         elif  jumpflag == 3:
-        #     jumpflag2 += 1
+
             if jumpflag2 == 6:
                 continue
             else:
-                try:
-                    c = int(str(strd.text)[34:37])
-                    # print(c)
-                    temp.append(c)
-                except:
-                    try:
-                        c = int(str(strd.text)[34:36])
-                        # print(c)
-                        temp.append(c)
-                    except:
-                        c = int(str(strd.text)[34:35])
-                        # print(c)
-                        temp.append(c)
+                numtemp = re.findall('-?[1-9]\d*', str(strd.text))
+                temp.append(int(numtemp[0]))
                 commentnum.append(temp)
                 temp = []    
             # continue
@@ -71,11 +65,10 @@ def grabdata():
             jumpflag = 0
             continue
         
-    for row in commentnum:
-        print (row)
+    print (commentnum)
     # get next page        
-    # pagenum += 1
-    # grabdata()
+    pagenum += 1
+    grabSGdata()
 
 if __name__ == "__main__":
-    grabdata()
+    grabSGdata()
