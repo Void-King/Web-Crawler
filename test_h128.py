@@ -39,5 +39,8 @@ def grabdata(webstr):
     
 
 if __name__ == "__main__":
-    webstr = input("webstr:")
-    grabdata(webstr)
+    webstr = 'begin'
+    # www.yezibizhi.com
+    while webstr != 'end':
+        webstr = input("webstr:")
+        grabdata(webstr)
